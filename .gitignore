@@ -1,0 +1,11 @@
+# Default ignored files
+/shelf/
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+
+/target
+/.idea
+/moon_landing_steps.trace.db
+/moon_landing_steps.mv.db

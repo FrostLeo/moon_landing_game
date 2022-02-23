@@ -13,13 +13,17 @@ import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.codec.http.HttpServerKeepAliveHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
-import controller.HttpControllerImpl;
+import controller.HttpController;
 
 import javax.inject.Inject;
 
 public class NettyGameServer implements GameServer {
+    private HttpController controller;
+
     @Inject
-    private HttpControllerImpl controller;
+    public NettyGameServer(HttpController controller) {
+        this.controller = controller;
+    }
 
     public void begin() throws Exception {
         NioEventLoopGroup bossGroup = new NioEventLoopGroup(1);

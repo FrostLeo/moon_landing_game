@@ -1,6 +1,6 @@
 package config;
 
-import model.dto.GameStoryDto;
+import model.entity.GameStory;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -38,7 +38,7 @@ public class HibernateConfig {
                 registry = registryBuilder.build();
 
                 MetadataSources sources = new MetadataSources(registry);
-                sources.addAnnotatedClass(GameStoryDto.class);
+                sources.addAnnotatedClass(GameStory.class);
                 Metadata metadata = sources.getMetadataBuilder().build();
                 sessionFactory = metadata.getSessionFactoryBuilder().build();
 

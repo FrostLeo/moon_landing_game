@@ -1,106 +1,88 @@
 package service;
 
-import com.google.gson.Gson;
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.HttpVersion;
-import lombok.NoArgsConstructor;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import model.SpaceLanderState;
-import model.dto.GameStoryDto;
-import model.story.GameStory;
-import model.story.dao.GameStoryDao;
-import server.model.GameDataRequestMessage;
+import model.data.GameStoryDto;
+import model.entity.GameStory;
+import model.data.GameDataList;
+import model.data.dao.GameStoryDao;
+import service.model.GameDataRequestMessage;
+import service.validator.GameDataRequestMessageValidator;
 
 import javax.inject.Inject;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
-
-@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GameServiceImpl implements GameService {
-    @Inject
-    private GameStoryDao gameStoryDao;
+    GameStoryDao gameStoryDao;
+    GameDataRequestMessageValidator validator;
 
-    @Override
-    public DefaultFullHttpResponse loadGameStoryById(long id) {
-        Optional<GameStoryDto> currentDto = gameStoryDao.getById(id);
-        if (currentDto.isEmpty()) {
-            return getBadRequestStatus();
-        }
-        String response = getJson(currentDto.get());
-        return getHttpResponse(response);
+    @Inject
+    public GameServiceImpl(GameStoryDao gameStoryDao, GameDataRequestMessageValidator validator) {
+        this.gameStoryDao = gameStoryDao;
+        this.validator = validator;
     }
 
     @Override
-    public DefaultFullHttpResponse executeGameStep(GameDataRequestMessage dataMessage) {
-        String response = null;
+    public String loadGameStoryById(long id) {
+        Optional<GameStory> currentGameStory = getGameStory(id);
+        return currentGameStory.map(gameStory -> getDataView(GameStoryDto.getInstance(gameStory)))
+                                                .orElse(null);
+    }
+
+    @Override
+    public String executeGameStep(GameDataRequestMessage dataMessage) {
         if (dataMessage == null) {
-            response = processNullRequest();
+            return processNullRequest();
 
-        } else {
-            Optional<GameStoryDto> currentDto = gameStoryDao.getById(dataMessage.getId());
+        } else if (validator.isValidRequestMessage(dataMessage)) {
+            Optional<GameStory> optionGameStory = getGameStory(dataMessage.getId());
             int currentStep = dataMessage.getStep();
-            if (currentDto.isPresent()
 
-                    && currentDto
-                    .get()
-                    .toGameStory()
-                    .isLegalStep(currentStep)
+            if (optionGameStory.isPresent()) {
+                GameStory gameStory = optionGameStory.get();
+                GameDataList currentGameDataList = GameStoryDto.getInstance(gameStory).toGameDataList();
+//                GameDataList currentGameDataList = optionGameStory.get().toGameStoryDto().toGameDataList();
 
-                    && dataMessage
-                    .getStep() > 0) {
-
-                response = processMessageRequest(currentDto.get(), currentStep,
-                        dataMessage.getFuelUsage());
+                if (currentGameDataList.isLegalStep(currentStep)) {
+                    return processMessageRequest(gameStory, currentStep, dataMessage.getFuelUsage());
+                }
             }
         }
-        return (response == null)
-                ? getBadRequestStatus()
-                : getHttpResponse(response);
+        return null;
     }
 
-    // обрабатывает request, содержащий null и возвращает response
     private String processNullRequest() {
-        GameStoryDto currentDto = new GameStoryDto();
-        gameStoryDao.save(currentDto);
-        return getJson(currentDto);
+        GameStory gameStory = new GameStory();
+        gameStoryDao.save(gameStory);
+        return getDataView(GameStoryDto.getInstance(gameStory));
     }
 
-    // обрабатывает request, содержащий JSON в ожидаемом формате и возвращает response
-    private String processMessageRequest(GameStoryDto currentDto, int step,
-                                         double currentFuelUsage) {
-        GameStory currentGameStory = currentDto.toGameStory();
-        SpaceLanderState currentState = currentGameStory
-                                        .getPreviousSpaceLanderState(step);
+    private String processMessageRequest(GameStory gameStory, int step, double currentFuelUsage) {
+        GameDataList gameDataList = GameStoryDto.getInstance(gameStory).toGameDataList();
+        SpaceLanderState currentState = gameDataList.getPreviousSpaceLanderState(step);
 
         if (currentState.isDead()) {
             return null;
         }
 
         SpaceLanderState newState = currentState.upgradeToStep(currentFuelUsage);
-        String newGameData = currentGameStory
-                    .updateGameData(newState, step);
+        gameDataList.updateStoryList(newState, step);
 
-        currentDto.setGameData(newGameData);
-        gameStoryDao.update(currentDto);
-        return getJson(currentDto);
+        GameStoryDto updatedGameStoryDto = GameStoryDto.getInstance(gameDataList);
+        String updatedGameData = updatedGameStoryDto.getGameStoryListToJson();
+
+        gameStory.setGameStoryData(updatedGameData);
+        gameStoryDao.update(gameStory);
+        return getDataView(updatedGameStoryDto);
     }
 
-    // формирует и возвращает JSON
-    private String getJson(GameStoryDto currentDto) {
-        return new Gson().toJson(currentDto);
+    private Optional<GameStory> getGameStory(long id) {
+        return gameStoryDao.getById(id);
     }
 
-    // формирует и возвращает response (status 200 - OK)
-    private DefaultFullHttpResponse getHttpResponse(String response) {
-        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, OK,
-                Unpooled.copiedBuffer(response, StandardCharsets.UTF_8));
-    }
-
-    // формирует и возвращает response (status 400 - BAD REQUEST)
-    private DefaultFullHttpResponse getBadRequestStatus() {
-        return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, BAD_REQUEST);
+    private String getDataView(GameStoryDto gameStoryDto) {
+        return gameStoryDto.toView().getDataView();
     }
 }

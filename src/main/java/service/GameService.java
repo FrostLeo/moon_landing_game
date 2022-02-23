@@ -1,9 +1,8 @@
 package service;
 
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import server.model.GameDataRequestMessage;
+import service.model.GameDataRequestMessage;
 
 public interface GameService {
-    DefaultFullHttpResponse loadGameStoryById(long id);
-    DefaultFullHttpResponse executeGameStep(GameDataRequestMessage dataMessage);
+    String loadGameStoryById(long id);
+    String executeGameStep(GameDataRequestMessage dataMessage);
 }

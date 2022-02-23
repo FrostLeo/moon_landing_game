@@ -1,27 +1,27 @@
 package config;
 
+import com.github.vanbv.num.json.JsonParserDefault;
+import com.google.gson.Gson;
+import com.github.vanbv.num.json.JsonParser;
 import com.google.inject.AbstractModule;
 import controller.HttpController;
-import controller.HttpControllerImpl;
-import model.story.GameStory;
-import model.SpaceLander;
-import model.Spacecraft;
-import model.story.Story;
-import model.story.dao.GameStoryDao;
-import model.story.dao.GameStoryDaoImpl;
+import model.data.dao.GameStoryDao;
+import model.data.dao.GameStoryDaoImpl;
 import server.NettyGameServer;
 import server.GameServer;
 import service.GameService;
 import service.GameServiceImpl;
+import service.validator.GameDataRequestMessageValidator;
 
 public class GameModule extends AbstractModule {
     @Override
     protected void configure() {
-        bind(Spacecraft.class).to(SpaceLander.class);
-        bind(Story.class).to(GameStory.class);
         bind(GameStoryDao.class).to(GameStoryDaoImpl.class);
         bind(GameServer.class).to(NettyGameServer.class);
-        bind(HttpController.class).to(HttpControllerImpl.class);
         bind(GameService.class).to(GameServiceImpl.class);
+        bind(JsonParser.class).to(JsonParserDefault.class);
+        bind(HttpController.class);
+        bind(Gson.class);
+        bind(GameDataRequestMessageValidator.class);
     }
 }

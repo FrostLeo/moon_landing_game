@@ -30,8 +30,6 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-<!--            ВАЖНО использовать ту же версию драйвера для открытия db,
-                что и при её создании -->
             <version>1.4.199</version>
         </dependency>
 
@@ -54,9 +52,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.telegram</groupId>
-            <artifactId>telegrambots</artifactId>
-            <version>5.6.0</version>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.9.0</version>
         </dependency>
 
         <dependency>
@@ -65,18 +63,18 @@
             <version>4.1.73.Final</version>
         </dependency>
 
-<!--        библиотека для удобного управления ботом-->
-        <dependency>
-            <groupId>com.github.pengrad</groupId>
-            <artifactId>java-telegram-bot-api</artifactId>
-            <version>5.6.0</version>
-        </dependency>
-
 <!--        библиотека для удобного http-маппинга на netty-->
         <dependency>
             <groupId>com.github.vanbv</groupId>
             <artifactId>num</artifactId>
             <version>0.0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

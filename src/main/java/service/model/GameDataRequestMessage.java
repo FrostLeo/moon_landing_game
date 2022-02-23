@@ -1,4 +1,4 @@
-package server.model;
+package service.model;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -10,7 +10,7 @@ import lombok.experimental.FieldDefaults;
 @Setter
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GameDataRequestMessage {
+public class GameDataRequestMessage implements RequestMessage {
     long id;
     int step;
     double fuelUsage;

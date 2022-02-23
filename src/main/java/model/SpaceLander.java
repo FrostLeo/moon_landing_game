@@ -6,7 +6,6 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class SpaceLander implements Spacecraft {
     static final double FALL_ACCELERATION = 9.8;
@@ -31,11 +30,7 @@ public class SpaceLander implements Spacecraft {
     }
 
     public SpaceLanderState toState() {
-        return new SpaceLanderState(roundToTwoDecPlaces(getFlyHeight()),
-                roundToTwoDecPlaces(getFuelReserve()),
-                roundToTwoDecPlaces(getCurrentFuelUsage()),
-                roundToTwoDecPlaces(getFallSpeed()),
-                isDead());
+        return new SpaceLanderState(roundToTwoDecPlaces(getFlyHeight()), roundToTwoDecPlaces(getFuelReserve()), roundToTwoDecPlaces(getCurrentFuelUsage()), roundToTwoDecPlaces(getFallSpeed()), isDead());
     }
 
     // округляет значения до двух знаков после запятой
@@ -60,7 +55,8 @@ public class SpaceLander implements Spacecraft {
     }
 
     private void survivalCheck() {
-        if (flyHeight <= 0 && calculateLandingSpeed() > 5)
+        if ((flyHeight == 0 && fallSpeed > 5)
+                || (flyHeight < 0 && calculateLandingSpeed() > 5))
             isDead = true;
     }
 

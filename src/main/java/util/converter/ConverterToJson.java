@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import model.SpaceLanderState;
 import model.data.GameStoryDto;
+import view.ViewData;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -22,14 +23,14 @@ public class ConverterToJson implements Converter {
     }
 
     @Override
-    public String convert(GameStoryDto gameStoryDto) {
-        return gsonFormat.toJson(gameStoryDto);
+    public String convert(ViewData viewData) {
+        return gsonFormat.toJson(viewData);
     }
 
-    @Override
-    public GameStoryDto recoveryDtoFromJson(String json) {
-        return gsonFormat.fromJson(json, GameStoryDto.class);
-    }
+//    @Override
+//    public GameStoryDto recoveryDtoFromJson(String json) {
+//        return gsonFormat.fromJson(json, GameStoryDto.class);
+//    }
 
     @Override
     public List<SpaceLanderState> recoveryListFromJson(String gameStoryData) {

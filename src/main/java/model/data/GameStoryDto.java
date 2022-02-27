@@ -8,6 +8,7 @@ import model.entity.GameStory;
 import util.converter.Converter;
 import util.converter.ConverterToJson;
 import view.GameStoryView;
+import view.ViewData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +34,9 @@ public class GameStoryDto {
         return new GameStoryDto(gameDataList.getId(), gameDataList.getGameStoryList());
     }
 
-    public static GameStoryDto getInstance(String viewString) {
-        return converter.recoveryDtoFromJson(viewString);
-    }
+//    public static GameStoryDto getInstance(String viewString) {
+//        return converter.recoveryDtoFromJson(viewString);
+//    }
 
     private GameStoryDto(long id, List<SpaceLanderState> gameStoryList) {
         this.id = id;
@@ -43,7 +44,9 @@ public class GameStoryDto {
     }
 
     public GameStoryView toView() {
-        return new GameStoryView(converter.convert(this));
+        int currentStep = gameStoryList.size()-1;
+        ViewData viewData = new ViewData(id, currentStep, gameStoryList.get(currentStep));
+        return new GameStoryView(converter.convert(viewData));
     }
 
     public GameDataList toGameDataList() {

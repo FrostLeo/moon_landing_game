@@ -1,4 +1,4 @@
-package service.model;
+package model.request;
 
 public interface RequestMessage {
     long getId();

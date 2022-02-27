@@ -1,4 +1,4 @@
-package model.data.dao;
+package service.repository;
 
 import config.HibernateConfig;
 import model.entity.GameStory;
@@ -45,7 +45,7 @@ public class GameStoryDaoImpl implements GameStoryDao {
 
 //    }
 //    @Override
-//    public List<GameStory> getAll() {
+//    public List<GameStory> getBest() {
 //        try (Session session = HibernateConfig.getSessionFactory().openSession()) {
 //            List<GameStory> result = session.createCriteria(GameStory.class).list();
 //            return result;

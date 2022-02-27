@@ -1,8 +1,9 @@
 package service;
 
-import service.model.GameDataRequestMessage;
+import model.request.GameDataRequestMessage;
 
 public interface GameService {
+    String createNewGame();
     String loadGameStoryById(long id);
     String executeGameStep(GameDataRequestMessage dataMessage);
 }

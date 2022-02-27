@@ -6,8 +6,8 @@ import model.SpaceLanderState;
 import model.data.GameStoryDto;
 import model.entity.GameStory;
 import model.data.GameDataList;
-import model.data.dao.GameStoryDao;
-import service.model.GameDataRequestMessage;
+import service.repository.GameStoryDao;
+import model.request.GameDataRequestMessage;
 import service.validator.GameDataRequestMessageValidator;
 
 import javax.inject.Inject;
@@ -25,25 +25,28 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    public String createNewGame() {
+        GameStory gameStory = new GameStory();
+        gameStoryDao.save(gameStory);
+        return getDataView(GameStoryDto.getInstance(gameStory));
+    }
+
+    @Override
     public String loadGameStoryById(long id) {
         Optional<GameStory> currentGameStory = getGameStory(id);
         return currentGameStory.map(gameStory -> getDataView(GameStoryDto.getInstance(gameStory)))
-                                                .orElse(null);
+                .orElse(null);
     }
 
     @Override
     public String executeGameStep(GameDataRequestMessage dataMessage) {
-        if (dataMessage == null) {
-            return processNullRequest();
-
-        } else if (validator.isValidRequestMessage(dataMessage)) {
+        if (validator.isValidRequestMessage(dataMessage)) {
             Optional<GameStory> optionGameStory = getGameStory(dataMessage.getId());
             int currentStep = dataMessage.getStep();
 
             if (optionGameStory.isPresent()) {
                 GameStory gameStory = optionGameStory.get();
                 GameDataList currentGameDataList = GameStoryDto.getInstance(gameStory).toGameDataList();
-//                GameDataList currentGameDataList = optionGameStory.get().toGameStoryDto().toGameDataList();
 
                 if (currentGameDataList.isLegalStep(currentStep)) {
                     return processMessageRequest(gameStory, currentStep, dataMessage.getFuelUsage());
@@ -51,12 +54,6 @@ public class GameServiceImpl implements GameService {
             }
         }
         return null;
-    }
-
-    private String processNullRequest() {
-        GameStory gameStory = new GameStory();
-        gameStoryDao.save(gameStory);
-        return getDataView(GameStoryDto.getInstance(gameStory));
     }
 
     private String processMessageRequest(GameStory gameStory, int step, double currentFuelUsage) {

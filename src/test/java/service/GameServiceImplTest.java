@@ -1,20 +1,24 @@
 package service;
 
+import com.google.gson.Gson;
 import config.HibernateConfig;
+import model.SpaceLanderState;
 import model.data.GameStoryDto;
-import model.data.dao.GameStoryDao;
-import model.data.dao.GameStoryDaoImpl;
+import service.repository.GameStoryDao;
+import service.repository.GameStoryDaoImpl;
 import org.junit.*;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import service.model.GameDataRequestMessage;
+import model.request.GameDataRequestMessage;
 import service.validator.GameDataRequestMessageValidator;
+import view.ViewData;
 
 @RunWith(Theories.class)
 public class GameServiceImplTest extends Assert {
     private static GameStoryDao gameStoryDao;
+    private static Gson gson;
     private GameServiceImpl service;
     private GameDataRequestMessage requestMessage;
 
@@ -25,6 +29,7 @@ public class GameServiceImplTest extends Assert {
         // Значение DDL присваивается в "./src/resources/db.properties"
         HibernateConfig.initSessionFactory();
         gameStoryDao = new GameStoryDaoImpl();
+        gson = new Gson();
     }
 
     @Before
@@ -52,47 +57,49 @@ public class GameServiceImplTest extends Assert {
 
     @Test
     public void createNewGameTest() {
-        String response = service.executeGameStep(null);
-        GameStoryDto recoveryDto = GameStoryDto.getInstance(response);
+        String response = service.createNewGame();
 
-        long newId = recoveryDto.getId();
-        String jsonList = recoveryDto.getGameStoryListToJson();
-        String expectedList = "[{\"flyHeight\":100.0,\"fuelReserve\":140.0,\"currentFuelUsage\":0.0,\"fallSpeed\":0.0,\"isDead\":false}]";
-        assertEquals(jsonList, expectedList);
+        ViewData recoveryData = gson.fromJson(response, ViewData.class);
+        long id = recoveryData.getId();
+        String jsonState = gson.toJson(recoveryData.getState());
 
-        hasEntryInDatabaseTest(jsonList, newId);
+        String expectedState = "{\"flyHeight\":100.0,\"fuelReserve\":140.0,\"currentFuelUsage\":0.0,\"fallSpeed\":0.0,\"isDead\":false}";
+        assertEquals(jsonState, expectedState);
 
-        // проверка успешного повторного выполнения с инкрементированием id
-        String anotherResult = service.executeGameStep(null);
-        GameStoryDto anotherDto = GameStoryDto.getInstance(anotherResult);
-        long incDifference = anotherDto.getId() - recoveryDto.getId();
+        hasBeenSavedEntryToDatabaseTest(jsonState, id);
+
+        // проверка успешного повторного выполнения и инкрементирования id
+        String anotherResponse = service.createNewGame();
+        ViewData recoveryAnotherData = gson.fromJson(anotherResponse, ViewData.class);
+        long newId = recoveryAnotherData.getId();
+        long incDifference = newId - id;
         assertEquals(incDifference, 1);
     }
 
     @Test
     public void executeGameStepTest() {
         // для проведения теста необходимо создать запись в БД
-        service.executeGameStep(null);
+        service.createNewGame();
 
         requestMessage.setId(1);
         requestMessage.setStep(1);
         requestMessage.setFuelUsage(5);
-
         String response = service.executeGameStep(requestMessage);
-        GameStoryDto recoveryDto = GameStoryDto.getInstance(response);
 
-        long newId = recoveryDto.getId();
-        String jsonList = recoveryDto.getGameStoryListToJson();
-        String expectedList = "{\"id\":1,\"gameStoryList\":[{\"flyHeight\":100.0,\"fuelReserve\":140.0,\"currentFuelUsage\":0.0,\"fallSpeed\":0.0,\"isDead\":false},{\"flyHeight\":97.6,\"fuelReserve\":135.0,\"currentFuelUsage\":5.0,\"fallSpeed\":4.8,\"isDead\":false}]}";
-        assertEquals(expectedList, response);
+        ViewData recoveryData = gson.fromJson(response, ViewData.class);
+        long id = recoveryData.getId();
+        String jsonState = gson.toJson(recoveryData.getState());
 
-        hasEntryInDatabaseTest(jsonList, newId);
+        String expectedState = "{\"flyHeight\":97.6,\"fuelReserve\":135.0,\"currentFuelUsage\":5.0,\"fallSpeed\":4.8,\"isDead\":false}";
+        assertEquals(expectedState, jsonState);
+
+        hasBeenSavedEntryToDatabaseTest(jsonState, id);
     }
 
     @Test
     public void nonExistentDataRequestTest() {
         // для проведения теста необходимо создать запись в БД
-        service.executeGameStep(null);
+        service.createNewGame();
 
         requestMessage.setId(100);
         requestMessage.setStep(1);
@@ -111,9 +118,10 @@ public class GameServiceImplTest extends Assert {
         HibernateConfig.close();
     }
 
-    private void hasEntryInDatabaseTest(String jsonList, long newId) {
-        assertEquals(jsonList, gameStoryDao.getById(newId)
-                .get()
-                .getGameStoryData());
+    private void hasBeenSavedEntryToDatabaseTest(String jsonState, long id) {
+        GameStoryDto recoveryDtoFromDb = GameStoryDto.getInstance(gameStoryDao.getById(id).get());
+        int lastIndex = recoveryDtoFromDb.getGameStoryList().size() - 1;
+        SpaceLanderState lastState = recoveryDtoFromDb.getGameStoryList().get(lastIndex);
+        assertEquals(jsonState, gson.toJson(lastState));
     }
 }

@@ -1,4 +1,4 @@
-package service.model;
+package model.request;
 
 import lombok.AccessLevel;
 import lombok.Getter;

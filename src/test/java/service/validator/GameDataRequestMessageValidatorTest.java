@@ -7,7 +7,7 @@ import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
 import org.junit.runner.RunWith;
-import service.model.GameDataRequestMessage;
+import model.request.GameDataRequestMessage;
 
 @RunWith(Theories.class)
 public class GameDataRequestMessageValidatorTest extends Assert {

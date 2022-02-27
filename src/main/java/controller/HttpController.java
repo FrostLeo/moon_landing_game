@@ -7,7 +7,7 @@ import io.netty.channel.ChannelHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import service.model.GameDataRequestMessage;
+import model.request.GameDataRequestMessage;
 import service.GameService;
 import util.HttpResponseStaticFactory;
 
@@ -25,9 +25,8 @@ public class HttpController extends AbstractHttpMappingHandler{
     }
 
     /**
-     * <b> Обработка GET запроса</b>
-     * <p>В маппинге запроса ожидается существующий в БД id.
-     * <br> Метод извлекает из БД запись игры по запрашиваемому id и возвращает response с данными в формате JSON.
+     * <p>В маппинге <b>GET</b> запроса ожидается существующий в БД id.
+     * <br> Метод извлекает из БД запись игры по запрашиваемому <b>id</b> и возвращает response с данными в формате JSON.
      *
      * <p> Метод вернет status <b>400 BAD REQUEST</b> в случае, если по данному id нет записи в БД.
      */
@@ -39,27 +38,33 @@ public class HttpController extends AbstractHttpMappingHandler{
     }
 
     /**
-     * <b> Обработка POST запроса</b>
-     * <p>В теле ожидается JSON (соответствующий классу GameDataRequestMessage) или null.
+     * Обработка <b>POST</b> запроса:
+     * <br> - в БД создается запись о новой игре со стартовыми параметрами и новым <b>id</b>;
+     * <br> - в response возвращаются данные с <b>id</b> и стартовыми параметрами.
+     */
+    @Post("/new_game")
+    public DefaultFullHttpResponse createNewGame() {
+        String result = gameService.createNewGame();
+        return HttpResponseStaticFactory.getResponse(result);
+    }
+
+    /**
+     * <p>В теле <b>POST</b> запроса ожидается JSON (соответствующий классу <b>GameDataRequestMessage</b>).
      *
-     * <p>Если в теле приходит null:
-     * <br> - в БД создается запись о новой игре со стартовыми параметрами и новым id;
-     * <br> - в response возвращаются данные с id и стартовыми параметрами.
-     *
-     * <p> Если в теле приходит JSON в ожидаемом формате:
+     * <p> Обработка запроса:
      * <br> - из БД достается запись с игрой;
      * <br> - вычисляются новые значения на требуемом шаге игры;
      * <br> - новые параметры перезаписываются в БД (при этом последующие шаги удаляются);
      * <br> - новые параметры возвращаются в response.
      *
      * <p> Метод вернет status <b>400 BAD REQUEST</b> в случаях:
-     * <br> - передаваемый в теле JSON не соответствует классу GameDataRequestMessage;
-     * <br> - по запрашиваемому id отсутствует запись в БД;
-     * <br> - передаваемое значение step превышает количество записей по запрашиваемому id<br> более чем на 1
+     * <br> - передаваемый в теле JSON не соответствует классу <b>GameDataRequestMessage</b>;
+     * <br> - по запрашиваемому <b>id</b> отсутствует запись в БД;
+     * <br> - значение поля <b>step</b> превышает количество записей по запрашиваемому <b>id</b> более чем на 1
      * (т.е. для данной игры этот номер шага не является следующим и нет существующей записи с таким номером);
-     * <br> - если в теле запроса передается что-либо, кроме JSON или null.
+     * <br> - если в теле запроса передается что-либо, кроме JSON.
      */
-    @Post("/game")
+    @Post("/game_step")
     public DefaultFullHttpResponse gameStep(@RequestBody GameDataRequestMessage dataMessage) {
         String result = gameService.executeGameStep(dataMessage);
         return HttpResponseStaticFactory.getResponse(result);

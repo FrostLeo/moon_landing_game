@@ -1,6 +1,6 @@
 package service.validator;
 
-import service.model.GameDataRequestMessage;
+import model.request.GameDataRequestMessage;
 
 import javax.inject.Singleton;
 
